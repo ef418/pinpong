@@ -1,16 +1,18 @@
 from pygame import *
-
-
+from random import shuffle
 
 FPS = 60
 game = True
 win_w = 1100
 win_h = 700
+finish = False
+
 
 player_size_w = 20
 player_size_h = 200
 ball_size = 50
 ball_speed = 3
+randspeed = [-1,1]
 
 font.init()
 main_win = display.set_mode((win_w,win_h))
@@ -52,8 +54,10 @@ class Player(GameSprite):
 class Ball(GameSprite):
     def __init__(self,player_image,player_x,player_y,player_speed,w,h):
         super().__init__(player_image,player_x,player_y,player_speed,w,h)
-        self.speed_x = self.speed
-        self.speed_y = self.speed
+        shuffle(randspeed)
+        self.speed_x = self.speed * randspeed[0]
+        shuffle(randspeed)
+        self.speed_y = self.speed * randspeed[0]
     def update_ball(self):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
@@ -62,15 +66,27 @@ class Ball(GameSprite):
 
 
 
+class Button(GameSprite):
+    def is_pressed(self,x,y):
+        return self.rect.collidepoint(x,y)
+
+    
+
+
+
+
+font.init()
+font1 = font.SysFont('Arial',100)
+WIN_l = font1.render('победил левый игрок!',True,(255,215,0))
+font2 = font.SysFont('Arial',100)
+WIN_r = font1.render('победил правый игрок!',True,(255,215,0))
 
 
 
 
 
 
-
-
-
+button = Button('reset.png',450,525,0,150,150)
 ball = Ball('ball.png',275,525,ball_speed,ball_size,ball_size)
 player_l = Player('racket.png',40,250,5,player_size_w,player_size_h)
 player_r = Player('racket.png',1040,250,5,player_size_w,player_size_h)
@@ -79,16 +95,39 @@ while game:
     for e in event.get():
         if e.type == QUIT:
             game = False
-    if sprite.collide_rect(player_l,ball) or sprite.collide_rect(player_r,ball):
-        ball.speed_x *= -1
+        if e.type == MOUSEBUTTONDOWN and e.button == 1:
+            x,y = e.pos
+            if finish:
+                if button.is_pressed(x,y):
+                    ball = Ball('ball.png',275,525,ball_speed,ball_size,ball_size)
+                    finish = False
 
-    main_win.blit(background,(0,0))
-    player_l.reset()
-    player_l.update_l()
-    player_r.reset()
-    player_r.update_r()
-    ball.reset()
-    ball.update_ball()
+
+
+    if not finish:
+        if sprite.collide_rect(player_l,ball) or sprite.collide_rect(player_r,ball):
+            ball.speed_x *= -1
+
+        main_win.blit(background,(0,0))
+        player_l.reset()
+        player_l.update_l()
+        player_r.reset()
+        player_r.update_r()
+        ball.reset()
+        ball.update_ball()
+
+        if ball.rect.x < 0:
+            main_win.blit(WIN_r,(115,250))
+            button.reset()
+            del ball
+            finish = True
+
+
+        elif ball.rect.x > 1050:
+            main_win.blit(WIN_l,(130,250))
+            button.reset()
+            del ball
+            finish = True
 
 
 
